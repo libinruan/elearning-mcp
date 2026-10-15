@@ -20,6 +20,18 @@ modules = [
     (8, "Capstone & career", "综合项目与求职", "Build a complete agentic workflow on MCP, then rehearse production and system-design interviews."),
 ]
 
+# Chinese module blurbs, keyed by module number
+modules_zh = {
+    1: "MCP 是什么、解决什么问题、有哪些参与者（Participants）与分层（Layers），以及协议如何进行版本管理（Versioning）。",
+    2: "JSON-RPC 消息、无状态（Stateless）请求模型、发现（Discovery）、传输（Transports）以及贯穿各处的通用模式。",
+    3: "工具（Tools）、资源（Resources）与提示模板（Prompts）——服务器提供的三类能力——外加补全（Completion）、缓存（Caching）与订阅（Subscriptions）。",
+    4: "用 Python SDK 编写服务器，设计大语言模型（LLM）好用的工具，然后测试并调试它们。",
+    5: "客户端特性（Client Features）、LLM 工具调用循环（Tool-use Loop）、多轮往返请求（Multi Round-Trip Requests），以及可扩展到众多服务器的宿主（Host）。",
+    6: "面向远程服务器的 OAuth 2.1、MCP 系统面临的攻击（Attacks），以及如何安全地运行本地服务器。",
+    7: "扩展机制（Extension Mechanism）、Tasks、MCP Apps、技能（Skills）、授权扩展、注册中心（Registry）、SDK 与路线图（Roadmap）。",
+    8: "在 MCP 上构建一个完整的智能体工作流（Agentic Workflow），然后演练生产环境与系统设计（System Design）面试。",
+}
+
 lessons = [
     # module, id, title_zh, minutes, sources
     (1, "1-1", "什么是 MCP，为什么需要它", 45, [
@@ -141,7 +153,7 @@ course = {
     "spec_version": "2026-07-28",
     "source": f"{D}/getting-started/intro",
     "sdk": "mcp 2.3.0",
-    "modules": [{"n": n, "title": t, "title_zh": z, "blurb": b} for n, t, z, b in modules],
+    "modules": [{"n": n, "title": t, "title_zh": z, "blurb": b, "blurb_zh": modules_zh[n]} for n, t, z, b in modules],
     "lessons": [{"id": i, "module": m, "title_zh": z, "minutes": mins, "sources": s} for m, i, z, mins, s in lessons],
 }
 Path(__file__).with_name("course.json").write_text(json.dumps(course, ensure_ascii=False, indent=1), encoding="utf-8")
@@ -161,6 +173,26 @@ course["plan"] = [
     {"week": 4, "title": "Ecosystem, capstone & interviews", "lessons": ["7-1", "7-2", "7-3", "7-4", "8-1", "8-2"],
      "goal": "Know the extensions and ecosystem, finish the capstone, and answer design questions fluently.",
      "milestone": "Capstone running end to end; every pitch rehearsed under 30 s; all interview cards marked “Got it”."},
+]
+course["plan_zh"] = [
+    {"title": "心智模型与协议底层",
+     "goal": "能在白板上讲清 MCP，并读懂任意一条原始 MCP 消息：谁发送、含义是什么、由哪种传输（Transport）承载。",
+     "milestone": "手写一段 JSON-RPC 交互（server/discover → tools/list → tools/call），以及一个带 Mcp-* 请求头的 HTTP 请求。"},
+    {"title": "服务器原语与构建服务器",
+     "goal": "交付一个设计良好的服务器，暴露工具（Tools）、资源（Resources）与提示模板（Prompts），并用内存客户端和 Inspector 完成测试。",
+     "milestone": "你自己的服务器（任意领域）：3 个以上工具、一个资源模板（Resource Template）和一个提示模板，并通过脚本化测试。"},
+    {"title": "客户端、智能体循环与安全",
+     "goal": "构建宿主（Host）一侧：跨多个服务器的 LLM 工具循环，支持 MRTR 输入，并能抵御已知攻击。",
+     "milestone": "一个能在两个服务器之间路由的智能体循环（Agent Loop），通过征询（Elicitation）请求确认，并校验持有者令牌（Bearer Token）。"},
+    {"title": "生态、综合项目与面试",
+     "goal": "了解各类扩展（Extensions）与生态，完成综合项目（Capstone），并能流畅回答系统设计问题。",
+     "milestone": "综合项目端到端跑通；每段电梯演讲都能在 30 秒内讲完；所有面试卡片都标记为“掌握了”。"},
+]
+course["method_zh"] = [
+    ["读", "先读本课的精要（15–25 分钟）。只有想了解完整细节时，才去浏览顶部链接的官方页面。"],
+    ["跑", "从上到下运行笔记本，然后完成“动手练习”——知识就是在这里扎根的。"],
+    ["说", "用计时器大声演练每段 30 秒电梯演讲。说不出来，就说明还没真正掌握。"],
+    ["记", "先作答再翻开面试卡片；标记没把握的题，并在 2 天和 7 天后打乱顺序再练一遍。"],
 ]
 course["method"] = [
     ["Read", "Open the lesson's digest first (15–25 min). Skim the official pages linked at the top only where you want the full detail."],

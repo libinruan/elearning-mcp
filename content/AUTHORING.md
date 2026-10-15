@@ -45,6 +45,21 @@ e.g. `server/discover（服务器发现）`.)
 Markdown explanation, then ```python cells. Ends with a `### Your turn` section of 2–4 exercises.
 ```
 
+## Chinese translation (`content/lessons/zh/X-Y.md`)
+
+Optional per lesson; when present the site's 中文 toggle shows it and `build.py` writes `notebooks/zh/`.
+
+- Same format and section markers (`## Summary` … `## Notebook` stay in English). Front matter uses `title_zh:` (the
+  lesson's `title_zh` from `course.json`) and a translated `outcome:`.
+- Same number and order of key points, pitches, interview questions, glossary entries and `### ` lesson subheadings.
+  Glossary lines keep the English term and the 中文 column, with the definition translated.
+- ```` ```python ```` blocks are copied unchanged — `build.py` fails the lesson if any code cell differs from English.
+- Key terminology keeps its English term in full-width parentheses on first use in each block (summary, each lesson
+  subsection, each key point, pitch, answer and notebook cell): 宿主（Host）, 提示注入（Prompt Injection）.
+- Simplified Chinese, consistent with the glossary's 中文 column.
+
+If a lesson's translation fails these checks, the build reports it and the site falls back to English for that lesson.
+
 ## Notebook rules
 
 - The notebook must run top to bottom with **no network access beyond 127.0.0.1** and no API key,

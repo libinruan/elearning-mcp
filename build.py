@@ -1,9 +1,10 @@
 #!/usr/bin/env python
 """Turn content/ into the things the app serves.
 
-    content/course.json + content/lessons/X-Y.md
-        -> site/data/course.json   (everything the web page needs, pre-rendered to HTML)
-        -> notebooks/NN_X-Y_slug.ipynb   (one practice notebook per lesson)
+    content/course.json + content/lessons/X-Y.md (+ content/lessons/zh/X-Y.md, the Chinese translation)
+        -> site/data/course.json   (everything the web page needs, pre-rendered to HTML, both languages)
+        -> notebooks/NN_X-Y_slug.ipynb      (one practice notebook per lesson)
+        -> notebooks/zh/NN_X-Y_slug.ipynb   (its Chinese twin: translated markdown, identical code)
 
 Usage:
     python build.py                 build the site data; create notebooks that don't exist yet
@@ -27,7 +28,9 @@ from pygments.lexers import PythonLexer
 ROOT = Path(__file__).parent
 CONTENT = ROOT / "content"
 LESSONS = CONTENT / "lessons"
+LESSONS_ZH = LESSONS / "zh"
 NOTEBOOKS = ROOT / "notebooks"
+NOTEBOOKS_ZH = NOTEBOOKS / "zh"
 SITE_DATA = ROOT / "site" / "data"
 
 SECTIONS = ["Summary", "Lesson", "Key points", "Pitches", "Interview", "Glossary", "Notebook"]
@@ -40,7 +43,34 @@ class LessonError(Exception):
     pass
 
 
-def md(text):
+STRONG = re.compile(r"\*\*(?=\S)(.+?)(?<=\S)\*\*")
+EM = re.compile(r"(?<!\*)\*(?=[^\s*])([^*\n]+?)(?<=[^\s*])\*(?!\*)")
+CODE_SPAN = re.compile(r"(`+)(?:.+?)\1")
+
+
+def cjk_emphasis(text):
+    """Python-Markdown leaves `**宿主（Host）**的` alone: a closing `**` after full-width punctuation and before
+    a CJK character doesn't count. Chinese text does that constantly, so turn emphasis into HTML ourselves,
+    leaving fenced blocks and inline code untouched."""
+    out, fence = [], None
+    for line in text.splitlines():
+        m = FENCE.match(line.strip())
+        if m:
+            fence = None if fence and line.strip() == fence else (fence or m.group(1))
+            out.append(line)
+            continue
+        if fence:
+            out.append(line)
+            continue
+        spans = []  # park inline code behind placeholders so emphasis may wrap it but never reach into it
+        line = CODE_SPAN.sub(lambda m: spans.append(m.group(0)) or f"\0{len(spans) - 1}\0", line)
+        line = EM.sub(r"<em>\1</em>", STRONG.sub(r"<strong>\1</strong>", line))
+        out.append(re.sub("\0(\\d+)\0", lambda m: spans[int(m.group(1))], line))
+    return "\n".join(out)
+
+
+def md(text, zh=False):
+    text = cjk_emphasis(text) if zh else text
     return markdown.markdown(text.strip(), extensions=MD_EXTENSIONS, extension_configs=MD_CONFIG)
 
 
@@ -103,7 +133,7 @@ def split_cells(text):
     return cells
 
 
-def parse_lesson(path):
+def parse_lesson(path, required=("title_en", "outcome")):
     raw = path.read_text(encoding="utf-8")
     m = re.match(r"---\n(.*?)\n---\n(.*)", raw, re.S)
     if not m:
@@ -113,7 +143,7 @@ def parse_lesson(path):
         if line.strip():
             key, _, value = line.partition(":")
             meta[key.strip()] = value.strip().strip('"')
-    for key in ("title_en", "outcome"):
+    for key in required:
         if not meta.get(key):
             raise LessonError(f"front matter needs `{key}`")
 
@@ -150,6 +180,25 @@ def parse_lesson(path):
             "pitches": pitches, "interview": interview, "glossary": glossary, "cells": cells}
 
 
+def compare_translation(en, zh):
+    """A translation must keep the lesson's shape and leave every code cell untouched."""
+    problems = []
+    for key in ("points", "pitches", "interview", "glossary", "toc"):
+        if len(en[key]) != len(zh[key]):
+            problems.append(f"{key}: {len(en[key])} in English, {len(zh[key])} in Chinese")
+    en_terms = [g["term"] for g in en["glossary"]]
+    zh_terms = [g["term"] for g in zh["glossary"]]
+    if len(en_terms) == len(zh_terms) and en_terms != zh_terms:
+        problems.append(f"glossary terms must stay in English and in order: {zh_terms}")
+    en_code = [c["source"] for c in en["cells"] if c["type"] == "code"]
+    zh_code = [c["source"] for c in zh["cells"] if c["type"] == "code"]
+    if len(en_code) != len(zh_code):
+        problems.append(f"code cells: {len(en_code)} in English, {len(zh_code)} in Chinese")
+    else:
+        problems += [f"code cell {i + 1} differs from the English one" for i, (a, b) in enumerate(zip(en_code, zh_code)) if a != b]
+    return problems
+
+
 def slugify(text):
     return re.sub(r"[^a-z0-9]+", "-", text.lower()).strip("-")[:48]
 
@@ -158,22 +207,32 @@ def notebook_name(index, lesson, parsed):
     return f"{index:02d}_{lesson['id']}_{slugify(parsed['meta']['title_en'])}.ipynb"
 
 
-def make_notebook(lesson, parsed):
+def make_notebook(lesson, parsed, zh=False):
     lid = lesson["id"].replace("-", ".")
     links = " · ".join(f"[{s['title']}]({s['url']})" for s in lesson["sources"])
-    header = (f"# {lid} · {parsed['meta']['title_en']}\n\n"
-              f"**{lesson['title_zh']}**\n\n"
-              f"> **After this lesson you can:** {parsed['meta']['outcome']}\n\n"
-              f"Official reading: {links}\n\n"
-              "Run the cells top to bottom (`Shift+Enter`), then change things and re-run. "
-              "Everything runs locally: servers live in this kernel, in temp folders, or on localhost. "
-              "Cells that call a real LLM are skipped unless `ANTHROPIC_API_KEY` is set.")
+    if zh:
+        header = (f"# {lid} · {lesson['title_zh']}\n\n"
+                  f"**{lesson['title']}**\n\n"
+                  f"> **学完本课你能：** {parsed['meta']['outcome']}\n\n"
+                  f"官方阅读材料：{links}\n\n"
+                  "从上到下依次运行单元格（`Shift+Enter`），然后改动代码再重新运行。"
+                  "所有内容都在本地运行：服务器位于当前内核、临时目录或 localhost 上。"
+                  "调用真实大语言模型（LLM）的单元格只有在设置了 `ANTHROPIC_API_KEY` 时才会执行，否则自动跳过。")
+    else:
+        header = (f"# {lid} · {parsed['meta']['title_en']}\n\n"
+                  f"**{lesson['title_zh']}**\n\n"
+                  f"> **After this lesson you can:** {parsed['meta']['outcome']}\n\n"
+                  f"Official reading: {links}\n\n"
+                  "Run the cells top to bottom (`Shift+Enter`), then change things and re-run. "
+                  "Everything runs locally: servers live in this kernel, in temp folders, or on localhost. "
+                  "Cells that call a real LLM are skipped unless `ANTHROPIC_API_KEY` is set.")
     nb = nbformat.v4.new_notebook()
     nb.metadata["kernelspec"] = {"display_name": "Python 3 (ipykernel)", "language": "python", "name": "python3"}
     nb.cells = [nbformat.v4.new_markdown_cell(header)]
     for cell in parsed["cells"]:
         make = nbformat.v4.new_code_cell if cell["type"] == "code" else nbformat.v4.new_markdown_cell
-        nb.cells.append(make(cell["source"]))
+        # Jupyter's CommonMark has the same blind spot for Chinese emphasis as Python-Markdown
+        nb.cells.append(make(cjk_emphasis(cell["source"]) if zh and cell["type"] == "md" else cell["source"]))
     return nb
 
 
@@ -191,21 +250,26 @@ def execute(nb, label):
     return True
 
 
-def render(lesson, parsed, nb_file):
+def word_count(text, zh=False):
+    # Chinese is counted the usual way: one per character, plus one per embedded Latin word
+    return len(re.findall(r"[\u4e00-\u9fff]|[A-Za-z0-9_]+", text)) if zh else len(text.split())
+
+
+def render(lesson, parsed, nb_file, zh=False):
     return {
         **lesson,
-        "title": parsed["meta"]["title_en"],
+        "title": lesson["title_zh"] if zh else parsed["meta"]["title_en"],
         "outcome": parsed["meta"]["outcome"],
-        "summary": md(parsed["summary"]),
-        "lesson": md(parsed["lesson"]),
+        "summary": md(parsed["summary"], zh),
+        "lesson": md(parsed["lesson"], zh),
         "toc": parsed["toc"],
-        "points": [md(p) for p in parsed["points"]],
-        "pitches": [{"topic": p["topic"], "text": md(p["text"]), "words": len(p["text"].split())}
+        "points": [md(p, zh) for p in parsed["points"]],
+        "pitches": [{"topic": p["topic"], "text": md(p["text"], zh), "words": word_count(p["text"], zh)}
                     for p in parsed["pitches"]],
-        "interview": [{"q": q["q"], "a": md(q["a"])} for q in parsed["interview"]],
+        "interview": [{"q": q["q"], "a": md(q["a"], zh)} for q in parsed["interview"]],
         "glossary": parsed["glossary"],
         "notebook": nb_file,
-        "cells": [{"type": c["type"], "html": code_html(c["source"]) if c["type"] == "code" else md(c["source"])}
+        "cells": [{"type": c["type"], "html": code_html(c["source"]) if c["type"] == "code" else md(c["source"], zh)}
                   for c in parsed["cells"]],
     }
 
@@ -232,16 +296,33 @@ def main():
             print(f"FAIL {lesson['id']}: {exc}")
             ok = False
             continue
+        zh = None
+        zh_path = LESSONS_ZH / f"{lesson['id']}.md"
+        if zh_path.exists():
+            try:
+                zh = parse_lesson(zh_path, required=("title_zh", "outcome"))
+                problems = compare_translation(parsed, zh)
+            except LessonError as exc:
+                problems = [str(exc)]
+            if problems:
+                print(f"FAIL {lesson['id']} (zh): " + "; ".join(problems))
+                ok, zh = False, None
         nb = make_notebook(lesson, parsed)
         if args.check:
             ok = execute(nb, lesson["id"]) and ok
             continue
         name = notebook_name(index, lesson, parsed)
-        target = NOTEBOOKS / name
-        if args.force or not target.exists():
-            NOTEBOOKS.mkdir(exist_ok=True)
-            nbformat.write(nb, target)
-        out.append(render(lesson, parsed, name))
+        for folder, notebook in [(NOTEBOOKS, nb)] + ([(NOTEBOOKS_ZH, None)] if zh else []):
+            target = folder / name
+            if args.force or not target.exists():
+                folder.mkdir(parents=True, exist_ok=True)
+                nbformat.write(notebook or make_notebook({**lesson, "title": parsed["meta"]["title_en"]}, zh, zh=True), target)
+        entry = render(lesson, parsed, name)
+        if zh:
+            # same keys as the English entry, so the site can swap one for the other
+            entry["zh"] = {k: v for k, v in render(lesson, zh, f"zh/{name}", zh=True).items()
+                           if k not in lesson}
+        out.append(entry)
 
     if not args.check:
         SITE_DATA.mkdir(parents=True, exist_ok=True)
