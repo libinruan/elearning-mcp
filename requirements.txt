@@ -1,0 +1,10 @@
+# Site build + practice notebooks for the MCP Mastery study app
+jupyterlab>=4.2
+nbclient
+nbformat
+markdown
+pygments
+# What the notebooks use: the official MCP Python SDK (spec 2026-07-28) and, optionally, Claude
+mcp[cli]==2.3.0
+httpx
+anthropic

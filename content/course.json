@@ -1,0 +1,697 @@
+{
+ "title": "MCP Mastery",
+ "title_zh": "MCP 精通之路",
+ "subtitle": "Model Context Protocol for AI engineers — spec revision 2026-07-28",
+ "spec_version": "2026-07-28",
+ "source": "https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro",
+ "sdk": "mcp 2.3.0",
+ "modules": [
+  {
+   "n": 1,
+   "title": "The big picture",
+   "title_zh": "全局视角",
+   "blurb": "What MCP is, the problem it solves, its participants and layers, and how the protocol is versioned."
+  },
+  {
+   "n": 2,
+   "title": "The wire protocol",
+   "title_zh": "协议底层",
+   "blurb": "JSON-RPC messages, the stateless request model, discovery, transports and the cross-cutting patterns."
+  },
+  {
+   "n": 3,
+   "title": "Server primitives",
+   "title_zh": "服务器原语",
+   "blurb": "Tools, resources and prompts — the three things a server offers — plus completion, caching and subscriptions."
+  },
+  {
+   "n": 4,
+   "title": "Building servers",
+   "title_zh": "构建服务器",
+   "blurb": "Write servers with the Python SDK, design tools an LLM can use well, then test and debug them."
+  },
+  {
+   "n": 5,
+   "title": "Clients & agent loops",
+   "title_zh": "客户端与智能体循环",
+   "blurb": "Client features, the LLM tool-use loop, multi round-trip requests, and hosts that scale to many servers."
+  },
+  {
+   "n": 6,
+   "title": "Security & authorization",
+   "title_zh": "安全与授权",
+   "blurb": "OAuth 2.1 for remote servers, the attacks MCP systems face, and running local servers safely."
+  },
+  {
+   "n": 7,
+   "title": "Extensions & ecosystem",
+   "title_zh": "扩展与生态",
+   "blurb": "The extension mechanism, Tasks, MCP Apps, Skills, auth extensions, the Registry, SDKs and the roadmap."
+  },
+  {
+   "n": 8,
+   "title": "Capstone & career",
+   "title_zh": "综合项目与求职",
+   "blurb": "Build a complete agentic workflow on MCP, then rehearse production and system-design interviews."
+  }
+ ],
+ "lessons": [
+  {
+   "id": "1-1",
+   "module": 1,
+   "title_zh": "什么是 MCP，为什么需要它",
+   "minutes": 45,
+   "sources": [
+    {
+     "title": "What is MCP?",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/getting-started/intro"
+    },
+    {
+     "title": "Specification overview",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/index"
+    },
+    {
+     "title": "Design principles",
+     "url": "https://modelcontextprotocol.io/community/design-principles"
+    }
+   ]
+  },
+  {
+   "id": "1-2",
+   "module": 1,
+   "title_zh": "架构：宿主、客户端与服务器",
+   "minutes": 60,
+   "sources": [
+    {
+     "title": "Architecture overview",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/architecture"
+    },
+    {
+     "title": "Spec: Architecture",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/architecture/index"
+    }
+   ]
+  },
+  {
+   "id": "1-3",
+   "module": 1,
+   "title_zh": "版本、特性生命周期与 2026-07-28 的变化",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "Versioning",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/versioning"
+    },
+    {
+     "title": "Spec: Versioning and compatibility",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning"
+    },
+    {
+     "title": "Key changes (changelog)",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/changelog"
+    },
+    {
+     "title": "Deprecated features",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/deprecated"
+    },
+    {
+     "title": "Feature lifecycle policy",
+     "url": "https://modelcontextprotocol.io/community/feature-lifecycle"
+    }
+   ]
+  },
+  {
+   "id": "1-4",
+   "module": 1,
+   "title_zh": "MCP、技能（Skills）与函数调用的区别",
+   "minutes": 40,
+   "sources": [
+    {
+     "title": "Agent Skills specification",
+     "url": "https://agentskills.io/specification"
+    },
+    {
+     "title": "Skills extension",
+     "url": "https://modelcontextprotocol.io/extensions/skills/overview"
+    },
+    {
+     "title": "Build with Agent Skills",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-with-agent-skills"
+    },
+    {
+     "title": "Build an MCP client (function calling loop)",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-client"
+    }
+   ]
+  },
+  {
+   "id": "2-1",
+   "module": 2,
+   "title_zh": "JSON-RPC 消息、_meta 与错误码",
+   "minutes": 60,
+   "sources": [
+    {
+     "title": "Spec: Base protocol overview",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/index"
+    },
+    {
+     "title": "Schema reference",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/schema"
+    }
+   ]
+  },
+  {
+   "id": "2-2",
+   "module": 2,
+   "title_zh": "无状态协议与 server/discover",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "Spec: Discovery",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/discover"
+    },
+    {
+     "title": "Spec: Statelessness",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/index#statelessness"
+    },
+    {
+     "title": "Spec: Version negotiation",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/versioning"
+    }
+   ]
+  },
+  {
+   "id": "2-3",
+   "module": 2,
+   "title_zh": "传输层：stdio 与 Streamable HTTP",
+   "minutes": 70,
+   "sources": [
+    {
+     "title": "Spec: Transports overview",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/index"
+    },
+    {
+     "title": "Spec: stdio",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio"
+    },
+    {
+     "title": "Spec: Streamable HTTP",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http"
+    }
+   ]
+  },
+  {
+   "id": "2-4",
+   "module": 2,
+   "title_zh": "通用模式：取消、进度、分页与日志",
+   "minutes": 55,
+   "sources": [
+    {
+     "title": "Spec: Patterns overview",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/index"
+    },
+    {
+     "title": "Spec: Cancellation",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/cancellation"
+    },
+    {
+     "title": "Spec: Progress",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/progress"
+    },
+    {
+     "title": "Spec: Pagination",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/pagination"
+    },
+    {
+     "title": "Spec: Logging",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/logging"
+    }
+   ]
+  },
+  {
+   "id": "3-1",
+   "module": 3,
+   "title_zh": "工具（Tools）：模型可调用的能力",
+   "minutes": 70,
+   "sources": [
+    {
+     "title": "Understanding MCP servers",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts"
+    },
+    {
+     "title": "Spec: Tools",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+    }
+   ]
+  },
+  {
+   "id": "3-2",
+   "module": 3,
+   "title_zh": "资源（Resources）与资源模板",
+   "minutes": 55,
+   "sources": [
+    {
+     "title": "Spec: Resources",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/resources"
+    },
+    {
+     "title": "Understanding MCP servers",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts"
+    }
+   ]
+  },
+  {
+   "id": "3-3",
+   "module": 3,
+   "title_zh": "提示（Prompts）与参数补全",
+   "minutes": 45,
+   "sources": [
+    {
+     "title": "Spec: Prompts",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/prompts"
+    },
+    {
+     "title": "Spec: Completion",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/completion"
+    }
+   ]
+  },
+  {
+   "id": "3-4",
+   "module": 3,
+   "title_zh": "缓存与订阅：让列表保持新鲜",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "Spec: Caching",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/utilities/caching"
+    },
+    {
+     "title": "Spec: Subscriptions",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/subscriptions"
+    }
+   ]
+  },
+  {
+   "id": "4-1",
+   "module": 4,
+   "title_zh": "用 Python SDK 写第一个服务器",
+   "minutes": 70,
+   "sources": [
+    {
+     "title": "Build an MCP server",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-server"
+    },
+    {
+     "title": "SDKs",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/sdk"
+    }
+   ]
+  },
+  {
+   "id": "4-2",
+   "module": 4,
+   "title_zh": "为大模型设计好用的工具",
+   "minutes": 60,
+   "sources": [
+    {
+     "title": "Spec: Tools (stateful tools, errors)",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/server/tools"
+    },
+    {
+     "title": "Build with Agent Skills",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-with-agent-skills"
+    },
+    {
+     "title": "Client best practices",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/clients/client-best-practices"
+    }
+   ]
+  },
+  {
+   "id": "4-3",
+   "module": 4,
+   "title_zh": "测试与调试：Inspector 与日志",
+   "minutes": 60,
+   "sources": [
+    {
+     "title": "MCP Inspector",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector"
+    },
+    {
+     "title": "Inspector CLI client",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/cli"
+    },
+    {
+     "title": "Inspector protocol eras",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/protocol-eras"
+    },
+    {
+     "title": "Debugging",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tools/debugging"
+    }
+   ]
+  },
+  {
+   "id": "5-1",
+   "module": 5,
+   "title_zh": "客户端特性：征询、根目录与采样",
+   "minutes": 55,
+   "sources": [
+    {
+     "title": "Understanding MCP clients",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/client-concepts"
+    },
+    {
+     "title": "Spec: Roots",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/client/roots"
+    },
+    {
+     "title": "Spec: Sampling",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/client/sampling"
+    }
+   ]
+  },
+  {
+   "id": "5-2",
+   "module": 5,
+   "title_zh": "构建客户端与 LLM 工具调用循环",
+   "minutes": 75,
+   "sources": [
+    {
+     "title": "Build an MCP client",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-client"
+    }
+   ]
+  },
+  {
+   "id": "5-3",
+   "module": 5,
+   "title_zh": "多轮往返请求（MRTR）与征询",
+   "minutes": 70,
+   "sources": [
+    {
+     "title": "Spec: Multi round-trip requests",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/patterns/mrtr"
+    },
+    {
+     "title": "Spec: Elicitation",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/client/elicitation"
+    }
+   ]
+  },
+  {
+   "id": "5-4",
+   "module": 5,
+   "title_zh": "多服务器宿主：渐进式发现与代码模式",
+   "minutes": 65,
+   "sources": [
+    {
+     "title": "Client best practices",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/clients/client-best-practices"
+    },
+    {
+     "title": "Understanding MCP servers (multi-server example)",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/learn/server-concepts"
+    }
+   ]
+  },
+  {
+   "id": "5-5",
+   "module": 5,
+   "title_zh": "接入真实宿主：本地与远程服务器",
+   "minutes": 40,
+   "sources": [
+    {
+     "title": "Connect to local MCP servers",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-local-servers"
+    },
+    {
+     "title": "Connect to remote MCP servers",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/connect-remote-servers"
+    }
+   ]
+  },
+  {
+   "id": "6-1",
+   "module": 6,
+   "title_zh": "授权：MCP 中的 OAuth 2.1",
+   "minutes": 80,
+   "sources": [
+    {
+     "title": "Understanding authorization in MCP",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/authorization"
+    },
+    {
+     "title": "Spec: Authorization",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/index"
+    },
+    {
+     "title": "Spec: Authorization server discovery",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/authorization-server-discovery"
+    },
+    {
+     "title": "Spec: Client registration",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration"
+    }
+   ]
+  },
+  {
+   "id": "6-2",
+   "module": 6,
+   "title_zh": "攻击与防御：安全最佳实践",
+   "minutes": 75,
+   "sources": [
+    {
+     "title": "Security best practices",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices"
+    },
+    {
+     "title": "Spec: Authorization security considerations",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/security-considerations"
+    }
+   ]
+  },
+  {
+   "id": "6-3",
+   "module": 6,
+   "title_zh": "本地服务器安全与隔离",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "Local server security",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/local-server-security"
+    },
+    {
+     "title": "Inspector security model",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tools/inspector/security"
+    }
+   ]
+  },
+  {
+   "id": "7-1",
+   "module": 7,
+   "title_zh": "扩展机制与 Tasks 扩展",
+   "minutes": 55,
+   "sources": [
+    {
+     "title": "Extensions overview",
+     "url": "https://modelcontextprotocol.io/extensions/overview"
+    },
+    {
+     "title": "Extension support matrix",
+     "url": "https://modelcontextprotocol.io/extensions/client-matrix"
+    },
+    {
+     "title": "Tasks",
+     "url": "https://modelcontextprotocol.io/extensions/tasks/overview"
+    }
+   ]
+  },
+  {
+   "id": "7-2",
+   "module": 7,
+   "title_zh": "MCP Apps：在对话里渲染交互界面",
+   "minutes": 55,
+   "sources": [
+    {
+     "title": "MCP Apps overview",
+     "url": "https://modelcontextprotocol.io/extensions/apps/overview"
+    },
+    {
+     "title": "Build an MCP App",
+     "url": "https://modelcontextprotocol.io/extensions/apps/build"
+    }
+   ]
+  },
+  {
+   "id": "7-3",
+   "module": 7,
+   "title_zh": "Skills over MCP 与授权扩展",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "Skills extension",
+     "url": "https://modelcontextprotocol.io/extensions/skills/overview"
+    },
+    {
+     "title": "Authorization extensions",
+     "url": "https://modelcontextprotocol.io/extensions/auth/overview"
+    },
+    {
+     "title": "OAuth client credentials",
+     "url": "https://modelcontextprotocol.io/extensions/auth/oauth-client-credentials"
+    },
+    {
+     "title": "Enterprise-managed authorization",
+     "url": "https://modelcontextprotocol.io/extensions/auth/enterprise-managed-authorization"
+    }
+   ]
+  },
+  {
+   "id": "7-4",
+   "module": 7,
+   "title_zh": "注册中心、SDK 分级与路线图",
+   "minutes": 50,
+   "sources": [
+    {
+     "title": "The MCP Registry",
+     "url": "https://modelcontextprotocol.io/registry/about"
+    },
+    {
+     "title": "Registry quickstart",
+     "url": "https://modelcontextprotocol.io/registry/quickstart"
+    },
+    {
+     "title": "SDK tiering",
+     "url": "https://modelcontextprotocol.io/community/sdk-tiers"
+    },
+    {
+     "title": "Roadmap",
+     "url": "https://modelcontextprotocol.io/development/roadmap"
+    }
+   ]
+  },
+  {
+   "id": "8-1",
+   "module": 8,
+   "title_zh": "综合项目：基于 MCP 的研究助理工作流",
+   "minutes": 120,
+   "sources": [
+    {
+     "title": "Build an MCP server",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-server"
+    },
+    {
+     "title": "Build an MCP client",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/build-client"
+    },
+    {
+     "title": "Client best practices",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/develop/clients/client-best-practices"
+    }
+   ]
+  },
+  {
+   "id": "8-2",
+   "module": 8,
+   "title_zh": "生产清单与系统设计面试",
+   "minutes": 60,
+   "sources": [
+    {
+     "title": "Security best practices",
+     "url": "https://modelcontextprotocol.io/docs/2026-07-28/tutorials/security/security_best_practices"
+    },
+    {
+     "title": "Spec: Streamable HTTP",
+     "url": "https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/streamable-http"
+    },
+    {
+     "title": "Roadmap",
+     "url": "https://modelcontextprotocol.io/development/roadmap"
+    }
+   ]
+  }
+ ],
+ "plan": [
+  {
+   "week": 1,
+   "title": "Mental model & wire protocol",
+   "lessons": [
+    "1-1",
+    "1-2",
+    "1-3",
+    "1-4",
+    "2-1",
+    "2-2",
+    "2-3",
+    "2-4"
+   ],
+   "goal": "Explain MCP on a whiteboard and read any raw MCP message: who sends it, what it means, which transport carries it.",
+   "milestone": "Hand-write a JSON-RPC exchange (server/discover → tools/list → tools/call) and an HTTP request with its Mcp-* headers."
+  },
+  {
+   "week": 2,
+   "title": "Server primitives & building servers",
+   "lessons": [
+    "3-1",
+    "3-2",
+    "3-3",
+    "3-4",
+    "4-1",
+    "4-2",
+    "4-3"
+   ],
+   "goal": "Ship a well-designed server exposing tools, resources and prompts, tested with an in-memory client and the Inspector.",
+   "milestone": "Your own server (any domain) with 3+ tools, a resource template and a prompt, passing a scripted test."
+  },
+  {
+   "week": 3,
+   "title": "Clients, agent loops & security",
+   "lessons": [
+    "5-1",
+    "5-2",
+    "5-3",
+    "5-4",
+    "5-5",
+    "6-1",
+    "6-2",
+    "6-3"
+   ],
+   "goal": "Build the host side: an LLM tool loop over several servers, with MRTR input, and defend it against the known attacks.",
+   "milestone": "An agent loop that routes across two servers, asks for confirmation via elicitation, and validates a bearer token."
+  },
+  {
+   "week": 4,
+   "title": "Ecosystem, capstone & interviews",
+   "lessons": [
+    "7-1",
+    "7-2",
+    "7-3",
+    "7-4",
+    "8-1",
+    "8-2"
+   ],
+   "goal": "Know the extensions and ecosystem, finish the capstone, and answer design questions fluently.",
+   "milestone": "Capstone running end to end; every pitch rehearsed under 30 s; all interview cards marked “Got it”."
+  }
+ ],
+ "method": [
+  [
+   "Read",
+   "Open the lesson's digest first (15–25 min). Skim the official pages linked at the top only where you want the full detail."
+  ],
+  [
+   "Run",
+   "Work through the notebook top to bottom, then do the “Your turn” exercises — that is where the learning sticks."
+  ],
+  [
+   "Say",
+   "Rehearse each 30-second pitch out loud with the timer. If you can't say it, you don't own it yet."
+  ],
+  [
+   "Recall",
+   "Answer the interview cards before revealing them; mark the shaky ones and shuffle them again 2 and 7 days later."
+  ]
+ ]
+}
