@@ -134,7 +134,15 @@ r.model_dump(by_alias=True, exclude_none=True, mode="json")
 
 ## Source material
 
-The official pages are downloaded as markdown in
-`/tmp/claude-1000/-home-juan-projects-model-context-protocol/2babc8e0-56c7-4ad7-b549-43144d07c94e/scratchpad/docs/pages/`
-(file name = URL path with `/` → `__`, e.g. `specification__2026-07-28__server__tools.md`).
-The `specification__2026-07-28__schema.md` file is the full schema reference (700 KB — grep it, don't read it whole).
+Every official page is available as markdown by appending `.md` to its URL; the full index is
+<https://modelcontextprotocol.io/llms.txt>. To work offline, download the pages a lesson needs into a folder
+outside the repo, e.g.:
+
+```bash
+mkdir -p ~/mcp-docs && cd ~/mcp-docs
+curl -sL https://modelcontextprotocol.io/llms.txt \
+  | grep -oE "https://modelcontextprotocol.io/(docs/2026-07-28|specification/2026-07-28|extensions|registry)/[^)]+\.md" \
+  | sort -u | while read -r u; do curl -sL "$u" -o "$(echo "${u#https://modelcontextprotocol.io/}" | tr / _)"; done
+```
+
+`specification/2026-07-28/schema.md` is the full schema reference (700 KB — grep it, don't read it whole).
