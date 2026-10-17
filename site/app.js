@@ -19,8 +19,48 @@ const done = new Set(store.get("mcp.done", []));
 const marks = store.get("mcp.marks", {}); // "5-3#0" -> "know" | "review"
 const filters = { glossary: { q: "", module: "" }, pitches: { module: "" }, interview: { module: "", status: "", order: null } };
 let timers = [];
+let synced = false; // true once run.py's progress database answered; otherwise progress stays in this browser only
 
-const t = (en, zh) => (lang === "zh" ? zh : en);
+// Changes go to the local SQLite database through run.py, and to localStorage as a cache/fallback.
+function save(changes) {
+  store.set("mcp.done", [...done]);
+  store.set("mcp.marks", marks);
+  store.set("mcp.lang", lang);
+  if (!synced || !changes.length) return Promise.resolve(synced);
+  return fetch("/api/progress", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ changes }) })
+    .then((r) => { if (!r.ok) throw new Error(r.status); return true; })
+    .catch(() => {
+      console.warn("Could not save progress to progress.sqlite3; it is kept in this browser for now.");
+      return false;
+    });
+}
+
+// The database wins, except that each browser merges in the progress it had before, once (nothing is lost
+// whichever browser reaches the database first).
+async function syncProgress() {
+  const db = await fetch("/api/progress").then((r) => (r.ok ? r.json() : Promise.reject(r.status)));
+  synced = true;
+  const changes = [];
+  if (!store.get("mcp.merged", false)) {
+    [...done].filter((id) => !db.done.includes(id)).forEach((key) => {
+      db.done.push(key);
+      changes.push({ kind: "done", key, value: true });
+    });
+    Object.entries(marks).filter(([key]) => !(key in db.marks)).forEach(([key, value]) => {
+      db.marks[key] = value;
+      changes.push({ kind: "mark", key, value });
+    });
+  }
+  if (db.settings.lang) lang = db.settings.lang;
+  else changes.push({ kind: "setting", key: "lang", value: lang });
+  done.clear();
+  db.done.forEach((id) => done.add(id));
+  Object.keys(marks).forEach((k) => delete marks[k]);
+  Object.assign(marks, db.marks);
+  if (await save(changes)) store.set("mcp.merged", true);
+}
+
+const t =(en, zh) => (lang === "zh" ? zh : en);
 const dot = (id) => id.replace("-", ".");
 const minutes = (m) => lang === "zh"
   ? (m >= 60 ? `${Math.floor(m / 60)} 小时${m % 60 ? ` ${m % 60} 分钟` : ""}` : `${m} 分钟`)
@@ -366,7 +406,7 @@ function renderChrome() {
 
 document.getElementById("lang").addEventListener("click", () => {
   lang = lang === "zh" ? "en" : "zh";
-  store.set("mcp.lang", lang);
+  save([{ kind: "setting", key: "lang", value: lang }]);
   if (raw) course = localize(raw);
   renderChrome();
   if (course) render(true);
@@ -437,14 +477,15 @@ app.addEventListener("click", (event) => {
   if (!el) return;
   const action = el.dataset.action;
   if (action === "done") {
-    done.has(el.dataset.id) ? done.delete(el.dataset.id) : done.add(el.dataset.id);
-    store.set("mcp.done", [...done]);
+    const id = el.dataset.id;
+    done.has(id) ? done.delete(id) : done.add(id);
+    save([{ kind: "done", key: id, value: done.has(id) }]);
     render(true);
   } else if (action === "mark") {
     const card = el.closest(".qa");
     const key = card.dataset.key;
     if (marks[key] === el.dataset.mark) delete marks[key]; else marks[key] = el.dataset.mark;
-    store.set("mcp.marks", marks);
+    save([{ kind: "mark", key, value: marks[key] ?? null }]);
     card.classList.remove("know", "review");
     if (marks[key]) card.classList.add(marks[key]);
     card.querySelectorAll("[data-action=mark]").forEach((b) => {
@@ -491,7 +532,9 @@ app.innerHTML = `<p class="loading">${t("Loading the course…", "正在加载�
 Promise.all([
   fetch("data/course.json").then((r) => r.json()),
   fetch("/api/config").then((r) => r.json()).catch(() => ({})),
+  syncProgress().catch(() => {}), // served without run.py: browser-only progress
 ]).then(([data, config]) => {
+  renderChrome(); // the database may have switched the language
   raw = data;
   course = localize(raw);
   jupyter = config.jupyter || null;

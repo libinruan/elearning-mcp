@@ -52,6 +52,7 @@ Notebooks never need an API key. Cells that let a real model (Claude) drive the 
 | `notebooks/zh/` | The Chinese notebooks (translated markdown, the same code), opened when the site is in 中文 mode |
 | `site/` | The website (plain HTML/CSS/JS, no build step) |
 | `run.py` | Rebuilds the site data, then serves the site and JupyterLab |
+| `progress.py` | Your progress in `progress.sqlite3` (git-ignored), served to the site at `/api/progress` |
 
 ## Editing or adding content
 
@@ -66,7 +67,11 @@ In the `## Notebook` section, ```` ```python ```` blocks become runnable cells; 
 
 ## Notes
 
-- Progress (done lessons, Q&A marks) is saved in your browser's local storage for `localhost:8000`.
+- Progress (done lessons, Q&A marks, language) is saved by `run.py` in `progress.sqlite3` in the project folder, so
+  it survives browser changes and cleared caches; a `history` table records when you did what. The file is
+  git-ignored — it never leaves your machine. Back it up by copying it; delete it to start over. (Opened without
+  `run.py`, the site falls back to your browser's local storage. Progress a browser saved before the database existed
+  is merged in automatically the first time it connects.)
 - MCP moves fast. This course targets spec **2026-07-28** (stateless requests, `server/discover`, multi round-trip
   requests, `subscriptions/listen`) and notes where it differs from 2025-11-25, which you will still meet in real code.
 - The digests, notebooks and interview material are study aids written from the public documentation; they are not

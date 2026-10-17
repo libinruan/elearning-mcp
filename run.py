@@ -18,6 +18,8 @@ from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 
+import progress
+
 ROOT = Path(__file__).resolve().parent
 VENV_PY = ROOT / ".venv" / "bin" / "python"
 
@@ -51,16 +53,35 @@ class IPv6Server(ThreadingHTTPServer):
 class Handler(SimpleHTTPRequestHandler):
     config = {"jupyter": None}
 
+    def send_json(self, data, status=200):
+        body = json.dumps(data).encode()
+        self.send_response(status)
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
-        if self.path.split("?")[0] == "/api/config":
-            body = json.dumps(self.config).encode()
-            self.send_response(200)
-            self.send_header("Content-Type", "application/json")
-            self.send_header("Content-Length", str(len(body)))
-            self.end_headers()
-            self.wfile.write(body)
+        path = self.path.split("?")[0]
+        if path == "/api/config":
+            self.send_json(self.config)
+        elif path == "/api/progress":
+            self.send_json(progress.load())
         else:
             super().do_GET()
+
+    def do_POST(self):
+        if self.path.split("?")[0] != "/api/progress":
+            return self.send_json({"error": "not found"}, 404)
+        # Other sites can't send a JSON content type to localhost without a CORS preflight, which we never allow
+        if self.headers.get("Content-Type", "").split(";")[0].strip() != "application/json":
+            return self.send_json({"error": "expected application/json"}, 415)
+        try:
+            payload = json.loads(self.rfile.read(int(self.headers.get("Content-Length") or 0)) or b"{}")
+            progress.apply(payload["changes"])
+        except (ValueError, KeyError, TypeError) as exc:  # bad JSON, missing "changes", or a BadChange
+            return self.send_json({"error": str(exc)}, 400)
+        self.send_json(progress.load())
 
     def end_headers(self):
         self.send_header("Cache-Control", "no-store")
